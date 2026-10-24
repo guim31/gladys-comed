@@ -101,14 +101,16 @@ test/fixtures/comed/              real ComEd answers (24 h feed, hour average, d
 - **`daynexttoday` n'est pas du JSON** mais un littéral de graphique
   `[[Date.UTC(2026,9,24,0,0,0), 2.9], …]` : malgré « UTC », ce sont l'**heure murale de Chicago**
   (mois depuis 0) et l'heure de **début** ; 23 entrées au printemps (pas de 02:00), **24 à
-  l'automne** (une seule 01:00). Jour non publié : `[]`. Demain est publié l'après-midi (vu à
+  l'automne** (une seule 01:00, reprise pour les deux heures 01:00 afin que la nuit reste contiguë). Jour non publié : `[]`. Demain est publié l'après-midi (vu à
   14:36 CDT). Sans `date`, c'est aujourd'hui.
 - `datestart`/`dateend` (historique) gèrent mal le changement d'heure : non utilisés.
 - Prix **négatifs** fréquents la nuit (jusqu'à -1,6 ¢ le 24/10/2026).
 - Unité : pas de « cent » dans Gladys ; `currency/decimal` **sans unité**, « ¢/kWh » dans le nom
   (une unité `dollar` afficherait 2,9 $).
-- Déclencheurs de seuil : la moyenne horaire n'est jugée qu'à partir de son 3e prix (HH:15),
-  sinon elle déclenche et se dédéclenche à HH:05 ; au plus une fois par heure, seuil et sens.
+- Min/max du jour et déclencheurs de seuil : une moyenne horaire ne compte qu'à partir de son 3e prix (HH:15),
+  sinon elle déclenche et se dédéclenche à HH:05 ; au plus une fois par heure, seuil et sens
+  (mémorisé dans `/data`). Le statut « connecté » ne dépend que du flux 5 min : une requête
+  day-ahead seule ne dit pas que ComEd répond.
 
 # Notes du mainteneur (guim31)
 

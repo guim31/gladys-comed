@@ -55,7 +55,7 @@ test('the day-ahead prices: Chicago wall clock, hour starting', () => {
   assert.equal(slots[23].end.toISOString(), '2026-10-25T05:00:00.000Z');
 });
 
-test('the day the clocks go forward has 23 hours, the day they go back 24', () => {
+test('the day the clocks go forward has 23 hours, the day they go back 25', () => {
   const spring = parseDayAhead(fixture('day-ahead-2025-03-09.txt'), '2025-03-09');
   assert.equal(spring.length, 23);
   assert.deepEqual(
@@ -65,11 +65,15 @@ test('the day the clocks go forward has 23 hours, the day they go back 24', () =
   // Contiguous: 01:00 CST is followed by 03:00 CDT.
   assert.equal(spring[1].end.getTime(), spring[2].start.getTime());
 
-  // ComEd sends a single 01:00 for the 25-hour day: it is the first one.
+  // ComEd sends a single 01:00 for the 25-hour day: both 01:00 take its
+  // price, and the night stays contiguous.
   const autumn = parseDayAhead(fixture('day-ahead-2025-11-02.txt'), '2025-11-02');
-  assert.equal(autumn.length, 24);
+  assert.equal(autumn.length, 25);
   assert.equal(autumn[1].start.toISOString(), '2025-11-02T06:00:00.000Z');
-  assert.equal(autumn[2].start.toISOString(), '2025-11-02T08:00:00.000Z');
+  assert.equal(autumn[2].start.toISOString(), '2025-11-02T07:00:00.000Z');
+  assert.equal(autumn[2].price, autumn[1].price);
+  assert.equal(autumn[3].start.toISOString(), '2025-11-02T08:00:00.000Z');
+  assert.ok(autumn.every((s, i) => i === 0 || s.start.getTime() === autumn[i - 1].end.getTime()));
 });
 
 test('a day not published yet is an empty list, an odd answer an error', () => {

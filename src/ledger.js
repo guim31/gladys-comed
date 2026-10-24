@@ -23,13 +23,21 @@ export function createSceneLedger(dataDir) {
   let previous = null;
   // The last day whose day-ahead prices were announced.
   let announcedDay = null;
-  // The once-an-hour events already fired: "hourStartMs:id".
+  // The once-an-hour events already fired in the hour `hour` (start, ms),
+  // saved with the next price so a restart keeps the rule.
   let fired = { hour: null, ids: new Set() };
 
   async function save() {
     try {
       await mkdir(dataDir, { recursive: true });
-      await writeFile(`${path}.tmp`, JSON.stringify({ previous, announced_day: announcedDay }));
+      await writeFile(
+        `${path}.tmp`,
+        JSON.stringify({
+          previous,
+          announced_day: announcedDay,
+          fired: { hour: fired.hour, ids: [...fired.ids] },
+        }),
+      );
       await rename(`${path}.tmp`, path);
     } catch (err) {
       logger.debug(`Scene ledger not saved (${err.message})`);
@@ -46,9 +54,13 @@ export function createSceneLedger(dataDir) {
           p &&
           Number.isFinite(p.at) &&
           Number.isFinite(p.price) &&
-          Number.isFinite(p.average)
+          (p.average === null || Number.isFinite(p.average))
         ) {
           previous = p;
+        }
+        const f = saved.fired;
+        if (fired.hour === null && f && Number.isFinite(f.hour) && Array.isArray(f.ids)) {
+          fired = { hour: f.hour, ids: new Set(f.ids.filter((id) => typeof id === 'string')) };
         }
         if (typeof saved.announced_day === 'string' && announcedDay === null) {
           announcedDay = saved.announced_day;

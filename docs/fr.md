@@ -58,15 +58,15 @@ Les heures sont celles de **Chicago**, quel que soit le fuseau de votre Gladys.
 Chaque fonctionnalité est un capteur en lecture seule en ¢/kWh, gardé dans
 l'historique :
 
-| Fonctionnalité                            | Ce que c'est                                                             |
-| ----------------------------------------- | ------------------------------------------------------------------------ |
-| Prix 5 minutes                            | Le dernier prix temps réel, publié environ 6 minutes après ses 5 minutes |
-| Moyenne de l'heure en cours               | La moyenne des prix à 5 minutes de l'heure jusqu'ici : le prix facturé   |
-| Prix moyen du jour                        | La moyenne des prix à 5 minutes du jour                                  |
-| Prix horaire min / max du jour            | La plus basse et la plus haute moyenne horaire depuis minuit             |
-| Prix prévu de l'heure                     | La prévision pour l'heure en cours                                       |
-| Moyenne, prix min, prix max prévus demain | La prévision du lendemain, à partir de l'après-midi                      |
-| Prix de demain publiés                    | 1 une fois les prix prévus du lendemain publiés, 0 avant                 |
+| Fonctionnalité                            | Ce que c'est                                                                                      |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| Prix 5 minutes                            | Le dernier prix temps réel, publié environ 6 minutes après ses 5 minutes                          |
+| Moyenne de l'heure en cours               | La moyenne des prix à 5 minutes de l'heure jusqu'ici : le prix facturé                            |
+| Prix moyen du jour                        | La moyenne des prix à 5 minutes du jour                                                           |
+| Prix horaire min / max du jour            | La plus basse et la plus haute moyenne horaire depuis minuit (une heure compte à partir de HH:15) |
+| Prix prévu de l'heure                     | La prévision pour l'heure en cours                                                                |
+| Moyenne, prix min, prix max prévus demain | La prévision du lendemain, à partir de l'après-midi                                               |
+| Prix de demain publiés                    | 1 une fois les prix prévus du lendemain publiés, 0 avant                                          |
 
 La moyenne, le min et le max de demain gardent leur dernière valeur jusqu'à la
 publication des prix suivants : vérifiez **Prix de demain publiés** avant de vous
@@ -165,6 +165,4 @@ clé.
   votre coût complet du kWh.
 - Les prix prévus sont une prévision ; l'action de scène s'appuie dessus, le prix
   temps réel peut différer.
-- Le jour du passage à l'heure d'hiver, ComEd publie 24 heures prévues pour une
-  journée de 25 heures, et le flux de 24 heures peut manquer la première heure de
-  cette journée.
+- Le jour du passage à l'heure d'hiver, ComEd publie un seul prix prévu pour les deux heures 01:00 : les deux le reçoivent. Le flux de 24 heures peut aussi manquer la première heure de cette journée de 25 heures.

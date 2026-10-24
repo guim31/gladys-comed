@@ -57,7 +57,7 @@ test('a real night and morning: negative prices, a spike, the thresholds both wa
     '00:35 0.8',
     '00:45 0.6',
     '00:55 0.5',
-    '01:05 0.6',
+    '01:05 -1.3',
     '01:15 -0.6',
     '03:15 1',
     '03:25 0.7',
@@ -152,4 +152,38 @@ test('a lost or broken ledger starts afresh', async () => {
   assert.equal(ledger.previous, null);
   await ledger.setPrevious({ at: 1, price: 2, average: 3 });
   assert.deepEqual(ledger.previous, { at: 1, price: 2, average: 3 });
+});
+
+test('a price read together with the next one is compared too', async () => {
+  const world = await createWorld({ at: '2026-10-24T05:00:00Z' });
+  const base = new Date('2026-10-24T20:00:00Z').getTime(); // 15:00 in Chicago
+  const at = (i) => String(base + i * 5 * MINUTE);
+  world.api.feed = [1, 1, 1, 1].map((price, i) => ({ millisUTC: at(i + 1), price: String(price) }));
+  world.clock.set(base + 4 * 5 * MINUTE + 7 * MINUTE);
+  await world.app.cycle();
+  // 15:25 negative and 15:30 positive arrive in the same read.
+  world.api.feed.push({ millisUTC: at(5), price: '-0.5' }, { millisUTC: at(6), price: '0.3' });
+  world.clock.advance(12 * MINUTE);
+  await runFor(world, 1);
+  assert.deepEqual(summary(events(world, TRIGGER.NEGATIVE)), ['15:25 0.7']);
+});
+
+test('"once an hour" survives a restart', async () => {
+  const world = await createWorld({ at: '2026-10-24T05:00:00Z' });
+  const base = new Date('2026-10-24T20:00:00Z').getTime();
+  world.api.feed = [3, 3, 3, 1.4, 4.6].map((price, i) => ({
+    millisUTC: String(base + (i + 1) * 5 * MINUTE),
+    price: String(price),
+  }));
+  world.clock.set(base + 5 * MINUTE);
+  await runFor(world, 35); // below 3 at 15:20, above again at 15:25
+  assert.deepEqual(summary(events(world, TRIGGER.BELOW)), ['15:20 3 2.6']);
+
+  const again = await createWorld({
+    at: new Date(world.clock.now()).toISOString(),
+    dataDir: world.dataDir,
+  });
+  again.api.feed = [...world.api.feed, { millisUTC: String(base + 6 * 5 * MINUTE), price: '1.4' }];
+  await runFor(again, 10); // 15:30 drops under 3 again: same hour, not fired
+  assert.deepEqual(events(again, TRIGGER.BELOW), []);
 });

@@ -56,15 +56,15 @@ Las horas son las de **Chicago**, sea cual sea la zona horaria de su Gladys.
 
 Cada función es un sensor de solo lectura en ¢/kWh, guardado en el historial:
 
-| Función                                   | Qué es                                                                             |
-| ----------------------------------------- | ---------------------------------------------------------------------------------- |
-| Precio de 5 minutos                       | El último precio en tiempo real, publicado unos 6 minutos después de sus 5 minutos |
-| Media de la hora actual                   | La media de los precios de 5 minutos de la hora hasta ahora: el precio facturado   |
-| Precio medio de hoy                       | La media de los precios de 5 minutos de hoy                                        |
-| Precio horario mínimo / máximo hoy        | La media horaria más baja y más alta desde medianoche                              |
-| Precio previsto de la hora                | La previsión para la hora actual                                                   |
-| Media, mínimo, máximo previstos de mañana | La previsión de mañana, a partir de la tarde                                       |
-| Precios de mañana publicados              | 1 cuando los precios previstos de mañana están publicados, 0 antes                 |
+| Función                                   | Qué es                                                                                  |
+| ----------------------------------------- | --------------------------------------------------------------------------------------- |
+| Precio de 5 minutos                       | El último precio en tiempo real, publicado unos 6 minutos después de sus 5 minutos      |
+| Media de la hora actual                   | La media de los precios de 5 minutos de la hora hasta ahora: el precio facturado        |
+| Precio medio de hoy                       | La media de los precios de 5 minutos de hoy                                             |
+| Precio horario mínimo / máximo hoy        | La media horaria más baja y más alta desde medianoche (una hora cuenta desde las HH:15) |
+| Precio previsto de la hora                | La previsión para la hora actual                                                        |
+| Media, mínimo, máximo previstos de mañana | La previsión de mañana, a partir de la tarde                                            |
+| Precios de mañana publicados              | 1 cuando los precios previstos de mañana están publicados, 0 antes                      |
 
 La media, el mínimo y el máximo de mañana conservan su último valor hasta que se
 publican los precios siguientes: compruebe **Precios de mañana publicados** antes
@@ -162,6 +162,4 @@ una API pública que no pide clave.
   no es su coste completo por kWh.
 - Los precios previstos son una previsión; la acción de escena se basa en ellos, el
   precio en tiempo real puede ser distinto.
-- El día del cambio al horario de invierno, ComEd publica 24 horas previstas para
-  un día de 25 horas, y al flujo de 24 horas le puede faltar la primera hora de ese
-  día.
+- El día del cambio al horario de invierno, ComEd publica un solo precio previsto para las dos horas 01:00: ambas lo reciben. Al flujo de 24 horas también le puede faltar la primera hora de ese día de 25 horas.

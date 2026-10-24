@@ -88,3 +88,26 @@ test('nothing secret in the logs, even in debug', async (t) => {
   // No request URL either (a public API, but the rule stays: no address).
   assert.doesNotMatch(all, /https?:\/\//);
 });
+
+test("an afternoon outage, while tomorrow's prices are awaited, is still one warning", async (t) => {
+  // From 12:00 in Chicago, tomorrow's prices are asked every 30 minutes: a
+  // day-ahead request alone must not say "ComEd answers again".
+  const world = await createWorld({
+    at: '2026-10-24T17:00:00Z',
+    tomorrowFrom: '2026-10-25T05:00:00Z',
+  });
+  const lines = captureLogs(t);
+  world.api.down = true;
+  const statuses = [];
+  for (let i = 0; i < 3 * 60; i += 1) {
+    world.clock.advance(MINUTE);
+    await world.app.cycle();
+    statuses.push(world.gladys.fake.connectionStatus.connected);
+  }
+  // Disconnected from the first failed read on, never "connected" again.
+  const first = statuses.indexOf(false);
+  assert.ok(first >= 0 && first < 15);
+  assert.ok(statuses.slice(first).every((connected) => connected === false));
+  assert.equal(lines.filter((l) => l.includes('[INFO]')).length, 0, lines.join('\n'));
+  assert.equal(lines.filter((l) => /refresh failed/.test(l)).length, 1, lines.join('\n'));
+});

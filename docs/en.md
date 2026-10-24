@@ -54,15 +54,15 @@ The hours are **Chicago time**, whatever the timezone of your Gladys.
 
 Every feature is a read-only sensor in ¢/kWh, kept in the history:
 
-| Feature                                 | What it is                                                              |
-| --------------------------------------- | ----------------------------------------------------------------------- |
-| 5-minute price                          | The last real-time price, published about 6 minutes after its 5 minutes |
-| Current hour average                    | The average of the 5-minute prices of the hour so far: the billed price |
-| Average price today                     | The average of today's 5-minute prices                                  |
-| Lowest / highest hourly price today     | The lowest and highest hourly average since midnight                    |
-| Day-ahead price this hour               | The forecast for the current hour                                       |
-| Tomorrow's day-ahead average, low, high | Tomorrow's forecast, from the afternoon                                 |
-| Tomorrow's prices published             | 1 once tomorrow's day-ahead prices are out, 0 before                    |
+| Feature                                 | What it is                                                                       |
+| --------------------------------------- | -------------------------------------------------------------------------------- |
+| 5-minute price                          | The last real-time price, published about 6 minutes after its 5 minutes          |
+| Current hour average                    | The average of the 5-minute prices of the hour so far: the billed price          |
+| Average price today                     | The average of today's 5-minute prices                                           |
+| Lowest / highest hourly price today     | The lowest and highest hourly average since midnight (an hour counts from HH:15) |
+| Day-ahead price this hour               | The forecast for the current hour                                                |
+| Tomorrow's day-ahead average, low, high | Tomorrow's forecast, from the afternoon                                          |
+| Tomorrow's prices published             | 1 once tomorrow's day-ahead prices are out, 0 before                             |
 
 Tomorrow's average, low and high keep their last value until the next day's
 prices come out: check **Tomorrow's prices published** before using them in the
@@ -156,5 +156,4 @@ key.
   kWh.
 - The day-ahead prices are a forecast; the scene action plans on them, the
   real-time price may differ.
-- The day the clocks go back, ComEd publishes 24 day-ahead hours for a 25-hour
-  day, and the 24-hour feed may miss the first hour of that day.
+- The day the clocks go back, ComEd publishes one 01:00 day-ahead price for the two 01:00 hours: both get it. The 24-hour feed may also miss the first hour of that 25-hour day.

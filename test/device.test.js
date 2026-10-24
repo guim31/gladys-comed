@@ -66,3 +66,13 @@ test('a stale feed publishes no 5-minute price and says so', async () => {
   assert.equal(gladys.fake.connectionStatus.connected, false);
   assert.match(gladys.fake.connectionStatus.message.en, /no 5-minute price for 30 minutes/);
 });
+
+test("an hour of one or two prices is not yet today's high", async () => {
+  const world = await createWorld({ at: '2026-10-24T05:00:00Z' });
+  const base = new Date('2026-10-24T15:00:00Z').getTime(); // 10:00 in Chicago
+  world.api.extra = [{ millisUTC: String(base + 5 * 60 * 1000), price: '25.0' }];
+  world.clock.set(base + 12 * 60 * 1000);
+  await world.app.cycle();
+  assert.equal(last(world.gladys, FEATURE.PRICE_5MIN), 25);
+  assert.equal(last(world.gladys, FEATURE.MAX_HOUR_TODAY), 6.5);
+});

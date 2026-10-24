@@ -17,14 +17,15 @@
 //       The PJM day-ahead hourly prices of a Chicago day, in cents/kWh. Despite
 //       "Date.UTC", the fields are the Chicago wall clock (month from 0) and
 //       the hour is the one the price STARTS: 23 entries the day the clocks
-//       go forward (no 02:00), 24 the day they go back (one 01:00). A day not
+//       go forward (no 02:00), 24 the day they go back (one 01:00, used for
+//       both 01:00 hours). A day not
 //       published yet answers "[]". Tomorrow's prices appear in the afternoon.
 //
 // Prices are the supply price only (what Hourly Pricing customers pay per kWh
 // for energy), without delivery, capacity nor taxes.
 // -----------------------------------------------------------------------------
 
-import { chicagoHourStart } from './time.js';
+import { chicagoDay, chicagoHour, chicagoHourStart } from './time.js';
 
 export const API_URL = 'https://hourlypricing.comed.com/api';
 
@@ -151,8 +152,20 @@ export function parseDayAhead(text, day) {
     const price = Number(match[5]);
     const entryDay = `${year}-${String(month + 1).padStart(2, '0')}-${String(date).padStart(2, '0')}`;
     const start = entryDay === day ? chicagoHourStart(year, month + 1, date, hour) : null;
-    if (start && Number.isFinite(price) && !byStart.has(start.getTime())) {
-      byStart.set(start.getTime(), { start, end: new Date(start.getTime() + HOUR), price });
+    if (!start || !Number.isFinite(price) || byStart.has(start.getTime())) {
+      continue;
+    }
+    byStart.set(start.getTime(), { start, end: new Date(start.getTime() + HOUR), price });
+    // The day the clocks go back, ComEd sends one 01:00 for two hours: the
+    // second (CST) takes the same price, so the night stays contiguous for
+    // the scene action and the current hour has a forecast.
+    const repeat = new Date(start.getTime() + HOUR);
+    if (chicagoHour(repeat) === hour && chicagoDay(repeat) === day) {
+      byStart.set(repeat.getTime(), {
+        start: repeat,
+        end: new Date(repeat.getTime() + HOUR),
+        price,
+      });
     }
   }
   if (byStart.size === 0 && trimmed.replace(/\s/g, '') !== '[]') {

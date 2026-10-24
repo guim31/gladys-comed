@@ -105,12 +105,20 @@ export function createApp(gladys, options = {}) {
   async function refresh(reason, { force = false } = {}) {
     logger.debug(`Reading the prices (${reason})`);
     try {
-      const { changed, dayAheadError } = await market.refresh({ force });
+      const { changed, feedRead, dayAheadRead, dayAheadError } = await market.refresh({ force });
       const snapshot = market.snapshot();
       if (dayAheadError) {
         issues.fail('day-ahead', `ComEd day-ahead prices not read (${dayAheadError.message})`);
-      } else {
+      } else if (dayAheadRead) {
         issues.ok('day-ahead', 'ComEd day-ahead prices read again');
+      }
+      if (changed) {
+        refreshWidget();
+      }
+      // Only the real-time feed tells whether ComEd answers: a day-ahead
+      // request alone (tomorrow's, every 30 minutes) says nothing of it.
+      if (!feedRead) {
+        return;
       }
       const summary =
         `${snapshot.todaySamples.length} 5-minute prices today, ` +
@@ -129,9 +137,6 @@ export function createApp(gladys, options = {}) {
       } else {
         issues.ok('stale', 'ComEd publishes the 5-minute prices again');
         await setStatus(true);
-      }
-      if (changed) {
-        refreshWidget();
       }
     } catch (err) {
       issues.fail('api', `ComEd refresh failed (${err.message}), last known prices kept`);
@@ -159,49 +164,66 @@ export function createApp(gladys, options = {}) {
     }
   }
 
+  /**
+   * Compare each new 5-minute price, in order, with the one before it. A
+   * price read too late (the container was down) is only a baseline.
+   */
   async function firePriceEvents(snapshot) {
-    const { latest, currentHour } = snapshot;
-    if (!latest || !currentHour) {
+    const { samples } = snapshot;
+    let previous = ledger.previous;
+    const fresh = samples.filter((s) => previous === null || s.at.getTime() > previous.at);
+    if (fresh.length === 0) {
       return;
     }
-    const at = latest.at.getTime();
-    const previous = ledger.previous;
-    if (previous !== null && at <= previous.at) {
-      return;
+    // No price seen before (first start, /data lost): the last one is the
+    // baseline.
+    let candidates =
+      previous === null ? [] : fresh.filter((s) => now() - s.at.getTime() <= LATE_EVENT_MS);
+    if (candidates.length === 0) {
+      candidates = [fresh.at(-1)];
     }
-    const comparable =
-      previous !== null && at - previous.at <= MAX_GAP_MS && now() - at <= LATE_EVENT_MS;
-    // An average of one or two prices is a 5-minute price, not the hour's:
-    // until the third, the thresholds keep judging the last average (a
-    // baseline takes it as it is).
-    const judged = currentHour.count >= MIN_PRICES_JUDGED || !comparable;
-    const current = {
-      at: latest.at,
-      price: roundTenth(latest.price),
-      average: judged ? roundTenth(currentHour.average) : previous.average,
-      hourStart: hourOf(latest.at),
-    };
-    if (comparable) {
-      const hour = current.hourStart.getTime();
-      const events = eventsForPrice(previous, current);
-      for (const event of events) {
-        if (event.key !== 'negative_price' && ledger.firedThisHour(hour, event.id)) {
-          continue;
+    for (const sample of candidates) {
+      const at = sample.at.getTime();
+      const hourStart = hourOf(sample.at);
+      const inHour = samples.filter(
+        (s) => hourOf(s.at).getTime() === hourStart.getTime() && s.at <= sample.at,
+      );
+      const average = inHour.reduce((sum, s) => sum + s.price, 0) / inHour.length;
+      const comparable =
+        previous !== null && at - previous.at <= MAX_GAP_MS && now() - at <= LATE_EVENT_MS;
+      // An average of one or two prices is a 5-minute price, not the hour's:
+      // until the third, the thresholds keep judging the last average (none
+      // for a baseline).
+      const judged = inHour.length >= MIN_PRICES_JUDGED;
+      const current = {
+        at: sample.at,
+        price: roundTenth(sample.price),
+        average: judged ? roundTenth(average) : comparable ? previous.average : null,
+        hourAverage: roundTenth(average),
+        hourStart,
+      };
+      if (comparable) {
+        const hour = hourStart.getTime();
+        for (const event of eventsForPrice(previous, current)) {
+          if (event.key !== 'negative_price' && ledger.firedThisHour(hour, event.id)) {
+            continue;
+          }
+          try {
+            await gladys.publishSceneEvent(event.key, event.data);
+            ledger.markFired(hour, event.id);
+            logger.debug(`Scene event ${event.id} (${event.data.time})`);
+            issues.ok('scene', 'Scene events accepted by Gladys again');
+          } catch (err) {
+            // Not tried again: the next price is compared with this one.
+            issues.fail('scene', `Firing the scene event ${event.key} failed (${err.message})`);
+          }
         }
-        try {
-          await gladys.publishSceneEvent(event.key, event.data);
-          ledger.markFired(hour, event.id);
-          logger.debug(`Scene event ${event.id} (${event.data.time})`);
-          issues.ok('scene', 'Scene events accepted by Gladys again');
-        } catch (err) {
-          // Not tried again: the next price is compared with this one.
-          issues.fail('scene', `Firing the scene event ${event.key} failed (${err.message})`);
-        }
+      } else {
+        logger.debug(`5-minute price of ${sample.at.toISOString()} taken as the baseline`);
       }
-    } else {
-      logger.debug(`5-minute price of ${latest.at.toISOString()} taken as the baseline`);
+      previous = { at, price: current.price, average: current.average };
     }
-    await ledger.setPrevious({ at, price: current.price, average: current.average });
+    await ledger.setPrevious(previous);
   }
 
   async function announceTomorrow(snapshot) {

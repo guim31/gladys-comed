@@ -40,20 +40,23 @@ export const THRESHOLDS = ['0', '1', '2', '3', '4', '5', '6', '8', '10', '12', '
 /**
  * The events a new 5-minute price fires.
  * @param {{ at: Date, price: number, average: number }} previous
- * @param {{ at: Date, price: number, average: number, hourStart: Date }} current
- *   `average` is the rounded hourly average, as published
+ * @param {{ at: Date, price: number, average: number | null, hourAverage?: number, hourStart: Date }} current
+ *   `average` is the hourly average judged (null: not yet), `hourAverage`
+ *   the running one, sent in the event data
  * @returns {Array<{ key: string, data: object, id: string }>} `id` tells
  *   apart the events to fire once an hour
  */
 export function eventsForPrice(previous, current) {
   const events = [];
   const common = {
-    hour_average: current.average,
+    hour_average: current.hourAverage ?? current.average,
     price: current.price,
     hour_start: chicagoTime(current.hourStart),
     time: chicagoTime(current.at),
   };
-  for (const threshold of THRESHOLDS) {
+  // No average judged yet on one side (a baseline at HH:05): no threshold.
+  const judged = previous.average !== null && current.average !== null;
+  for (const threshold of judged ? THRESHOLDS : []) {
     const limit = Number(threshold);
     if (current.average < limit && previous.average >= limit) {
       events.push({ key: TRIGGER.BELOW, id: `below:${threshold}`, data: { threshold, ...common } });

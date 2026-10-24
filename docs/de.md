@@ -56,15 +56,15 @@ Die Uhrzeiten sind **Uhrzeit Chicago**, unabhängig von der Zeitzone deines Glad
 
 Jede Funktion ist ein schreibgeschützter Sensor in ¢/kWh, im Verlauf gespeichert:
 
-| Funktion                                           | Bedeutung                                                                     |
-| -------------------------------------------------- | ----------------------------------------------------------------------------- |
-| 5-Minuten-Preis                                    | Der letzte Echtzeitpreis, etwa 6 Minuten nach seinen 5 Minuten veröffentlicht |
-| Schnitt aktuelle Stunde                            | Der Schnitt der 5-Minuten-Preise der Stunde bisher: der abgerechnete Preis    |
-| Durchschnittspreis heute                           | Der Schnitt der heutigen 5-Minuten-Preise                                     |
-| Tiefster / höchster Stundenpreis heute             | Der niedrigste und höchste Stundenschnitt seit Mitternacht                    |
-| Day-Ahead-Preis dieser Stunde                      | Die Prognose für die aktuelle Stunde                                          |
-| Day-Ahead-Schnitt, -Tiefstwert, -Höchstwert morgen | Die Prognose für morgen, ab dem Nachmittag                                    |
-| Preise für morgen veröffentlicht                   | 1, sobald die Day-Ahead-Preise für morgen da sind, vorher 0                   |
+| Funktion                                           | Bedeutung                                                                               |
+| -------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| 5-Minuten-Preis                                    | Der letzte Echtzeitpreis, etwa 6 Minuten nach seinen 5 Minuten veröffentlicht           |
+| Schnitt aktuelle Stunde                            | Der Schnitt der 5-Minuten-Preise der Stunde bisher: der abgerechnete Preis              |
+| Durchschnittspreis heute                           | Der Schnitt der heutigen 5-Minuten-Preise                                               |
+| Tiefster / höchster Stundenpreis heute             | Der niedrigste und höchste Stundenschnitt seit Mitternacht (eine Stunde zählt ab HH:15) |
+| Day-Ahead-Preis dieser Stunde                      | Die Prognose für die aktuelle Stunde                                                    |
+| Day-Ahead-Schnitt, -Tiefstwert, -Höchstwert morgen | Die Prognose für morgen, ab dem Nachmittag                                              |
+| Preise für morgen veröffentlicht                   | 1, sobald die Day-Ahead-Preise für morgen da sind, vorher 0                             |
 
 Schnitt, Tiefst- und Höchstwert für morgen behalten ihren letzten Wert, bis die
 nächsten Preise kommen: Prüfe morgens **Preise für morgen veröffentlicht**, bevor
@@ -163,6 +163,4 @@ eine öffentliche API, die keinen Schlüssel verlangt.
   vollen Kosten pro kWh.
 - Die Day-Ahead-Preise sind eine Prognose; die Szenen-Aktion plant damit, der
   Echtzeitpreis kann abweichen.
-- Am Tag der Umstellung auf Winterzeit veröffentlicht ComEd 24 Day-Ahead-Stunden
-  für einen 25-Stunden-Tag, und dem 24-Stunden-Feed kann die erste Stunde dieses
-  Tages fehlen.
+- Am Tag der Umstellung auf Winterzeit veröffentlicht ComEd nur einen Day-Ahead-Preis für die beiden 01:00-Stunden: Beide erhalten ihn. Dem 24-Stunden-Feed kann außerdem die erste Stunde dieses 25-Stunden-Tages fehlen.

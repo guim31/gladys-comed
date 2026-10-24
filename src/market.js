@@ -27,6 +27,8 @@ export const FEED_LATE_RETRY_MS = 2 * MINUTE;
 export const FEED_EXPECTED_MS = (5 + 7) * MINUTE;
 export const FEED_STALE_MS = 30 * MINUTE;
 const FEED_BACKOFF_MS = [1, 2, 5, 10, 15].map((minutes) => minutes * MINUTE);
+/** An hour counts in the day's low and high from its third price (HH:15). */
+export const MIN_PRICES_PER_HOUR = 3;
 export const TODAY_RETRY_MS = 15 * MINUTE;
 export const TOMORROW_RETRY_MS = 30 * MINUTE;
 /** Chicago hour from which tomorrow's day-ahead prices are awaited. */
@@ -114,14 +116,15 @@ export function createMarket({ fetch = globalThis.fetch, now = () => Date.now() 
     /**
      * Read what is due (everything when `force`).
      * @param {{ force?: boolean }} [options]
-     * @returns {Promise<{ changed: boolean, newSample: boolean }>}
+     * @returns {Promise<{ changed: boolean, feedRead: boolean, dayAheadRead: boolean, dayAheadError: Error | null }>}
      * @throws {import('./comed.js').ComedError} the real-time feed failed;
      *   a day-ahead failure is reported in `dayAheadError`, not thrown
      */
     async refresh({ force = false } = {}) {
       const at = now();
       let changed = false;
-      let newSample = false;
+      let feedRead = false;
+      let dayAheadRead = false;
       let dayAheadError = null;
 
       for (const day of force ? dayAheadDueForce(at) : dayAheadDue(at)) {
@@ -130,6 +133,7 @@ export function createMarket({ fetch = globalThis.fetch, now = () => Date.now() 
           const slots = await fetchDayAhead(day, { fetch });
           changed ||= fingerprint(dayAhead.get(day) ?? []) !== fingerprint(slots);
           dayAhead.set(day, slots);
+          dayAheadRead = true;
         } catch (err) {
           dayAheadError = err;
         }
@@ -147,18 +151,18 @@ export function createMarket({ fetch = globalThis.fetch, now = () => Date.now() 
         try {
           const fresh = await fetchFiveMinutePrices({ fetch });
           const before = latest()?.at.getTime() ?? 0;
-          newSample = (fresh.at(-1)?.at.getTime() ?? 0) > before;
-          changed ||= newSample;
+          changed ||= (fresh.at(-1)?.at.getTime() ?? 0) > before;
           samples = fresh.length > 0 || samples.length === 0 ? fresh : samples;
           feedSuccessAt = at;
           feedFailures = 0;
+          feedRead = true;
         } catch (err) {
           feedFailures += 1;
           err.dayAheadError = dayAheadError;
           throw err;
         }
       }
-      return { changed, newSample, dayAheadError };
+      return { changed, feedRead, dayAheadRead, dayAheadError };
     },
 
     /**
@@ -189,7 +193,12 @@ export function createMarket({ fetch = globalThis.fetch, now = () => Date.now() 
         todaySamples,
         todayHours,
         todayAverage: summarize(todaySamples)?.average ?? null,
-        todaySummary: summarize(todayHours, (hour) => hour.average),
+        // An hour of one or two prices is not an hourly price yet (HH:05).
+        todaySummary: summarize(
+          todayHours.filter((hour) => hour.count >= MIN_PRICES_PER_HOUR),
+          (hour) => hour.average,
+        ),
+        samples,
         forecast,
         forecastToday,
         forecastNow: slotAt(forecastToday, at),

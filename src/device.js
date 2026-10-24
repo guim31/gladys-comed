@@ -35,9 +35,10 @@ export const FEATURE = {
   TOMORROW_AVAILABLE: 'tomorrow_available',
 };
 
-// Display bounds only (the core never applies them): real-time prices go
-// negative, and spike well above 20 ¢ on hot summer afternoons.
-const PRICE_BOUNDS = { min: -10, max: 50 };
+// Display bounds only (the core never applies them), symmetric for a signed
+// value (gauge needle): real-time prices go negative, and spike well above
+// 50 ¢ on the hottest afternoons.
+const PRICE_BOUNDS = { min: -100, max: 100 };
 const BINARY_BOUNDS = { min: 0, max: 1 };
 
 /** @param {object} gladys */
