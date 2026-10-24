@@ -10,6 +10,8 @@ the notes of the version's GitHub Release.
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-10-24
+
 ### Added
 
 - The ComEd Hourly Pricing device: the real-time 5-minute price, the average of
@@ -27,4 +29,5 @@ the notes of the version's GitHub Release.
 - A "Refresh the prices now" button in the configuration.
 - Feature names, texts and documentation in English, French, German and Spanish.
 
-[Unreleased]: https://github.com/guim31/gladys-comed/commits/main
+[Unreleased]: https://github.com/guim31/gladys-comed/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/guim31/gladys-comed/releases/tag/v1.0.0
