@@ -1,177 +1,1049 @@
 {
   "manifest_version": 1,
   "type": "device",
-  "name": "Demo Devices Template",
+  "name": "ComEd Hourly Pricing",
   "description": {
-    "en": "Starter template showing sensors, a switch, a dimmable light and a smart plug.",
-    "fr": "Template de démarrage : capteurs, interrupteur, lampe variable et prise connectée."
+    "en": "ComEd Hourly Pricing (Illinois): real-time 5-minute price, hourly average and tomorrow's prices.",
+    "fr": "ComEd Hourly Pricing (Illinois) : prix temps réel à 5 min, moyenne horaire et prix de demain.",
+    "de": "ComEd Hourly Pricing (Illinois): Echtzeitpreis alle 5 Min., Stundenschnitt und Preise für morgen.",
+    "es": "ComEd Hourly Pricing (Illinois): precio en tiempo real a 5 min, media horaria y precios de mañana."
   },
   "version": "1.0.0",
-  "docker_image": "ghcr.io/gladysassistant/integration-template-js:1.0.0",
+  "docker_image": "ghcr.io/guim31/gladys-comed:1.0.0",
   "gladys_version": ">=5.1.0",
-  "cover_image": "https://raw.githubusercontent.com/GladysAssistant/integration-template-js/master/cover.png",
-  "categories": ["lighting", "security", "environment"],
-  "transports": ["local", "cloud"],
+  "cover_image": "https://raw.githubusercontent.com/guim31/gladys-comed/main/cover.png",
+  "categories": ["energy"],
+  "transports": ["cloud"],
   "config_schema": [
     {
       "key": "intro",
       "type": "section",
-      "label": { "en": "Getting started", "fr": "Pour commencer" },
+      "label": {
+        "en": "ComEd Hourly Pricing",
+        "fr": "ComEd Hourly Pricing",
+        "de": "ComEd Hourly Pricing",
+        "es": "ComEd Hourly Pricing"
+      },
       "description": {
-        "en": "The demo weather station reads real data from the free Open-Meteo API: pick the coordinates to observe. No account, no API key.",
-        "fr": "La station météo de démonstration lit de vraies données via l'API gratuite Open-Meteo : choisissez les coordonnées à observer. Pas de compte, pas de clé d'API."
+        "en": "ComEd publishes the real-time electricity prices of its Hourly Pricing program (Northern Illinois) every 5 minutes, and the day-ahead prices of tomorrow in the afternoon, without account or key. Prices are the supply price in cents/kWh, Chicago time. Add the ComEd device from the Discovery tab, and the price widget from the dashboard. Not affiliated with ComEd.",
+        "fr": "ComEd publie toutes les 5 minutes les prix temps réel de l'électricité de son programme Hourly Pricing (nord de l'Illinois), et l'après-midi les prix prévus du lendemain (day-ahead), sans compte ni clé. Les prix sont le prix de fourniture en cents/kWh, à l'heure de Chicago. Ajoutez l'appareil ComEd depuis l'onglet Découverte, et le widget des prix depuis le tableau de bord. Sans lien avec ComEd.",
+        "de": "ComEd veröffentlicht alle 5 Minuten die Echtzeit-Strompreise seines Programms Hourly Pricing (Nord-Illinois) und am Nachmittag die Day-Ahead-Preise für morgen, ohne Konto oder Schlüssel. Die Preise sind der Energiepreis in Cent/kWh, Uhrzeit Chicago. Füge das ComEd-Gerät im Tab Entdecken hinzu und das Preis-Widget im Dashboard. Keine Verbindung zu ComEd.",
+        "es": "ComEd publica cada 5 minutos los precios de la electricidad en tiempo real de su programa Hourly Pricing (norte de Illinois), y por la tarde los precios previstos de mañana (day-ahead), sin cuenta ni clave. Los precios son el precio de suministro en centavos/kWh, hora de Chicago. Añada el dispositivo ComEd desde la pestaña Descubrir, y el widget de precios desde el panel. Sin relación con ComEd."
       },
       "links": [
         {
-          "url": "https://open-meteo.com/en/docs",
-          "label": { "en": "Open-Meteo documentation", "fr": "Documentation Open-Meteo" }
+          "url": "https://github.com/guim31/gladys-comed/blob/main/docs/en.md",
+          "label": {
+            "en": "Documentation",
+            "fr": "Documentation",
+            "de": "Dokumentation",
+            "es": "Documentación"
+          }
+        },
+        {
+          "url": "https://hourlypricing.comed.com/live-prices/",
+          "label": {
+            "en": "ComEd live prices",
+            "fr": "Prix en direct ComEd",
+            "de": "ComEd-Livepreise",
+            "es": "Precios en directo de ComEd"
+          }
         }
       ]
     },
     {
-      "key": "latitude",
-      "type": "number",
-      "label": { "en": "Latitude", "fr": "Latitude" },
-      "description": {
-        "en": "Latitude used for the demo weather sensor.",
-        "fr": "Latitude utilisée par le capteur météo de démonstration."
-      },
-      "placeholder": { "en": "e.g. 48.8566", "fr": "ex. 48.8566" },
-      "required": true,
-      "default": 48.8566,
-      "min": -90,
-      "max": 90
-    },
-    {
-      "key": "longitude",
-      "type": "number",
-      "label": { "en": "Longitude", "fr": "Longitude" },
-      "description": {
-        "en": "Longitude used for the demo weather sensor.",
-        "fr": "Longitude utilisée par le capteur météo de démonstration."
-      },
-      "placeholder": { "en": "e.g. 2.3522", "fr": "ex. 2.3522" },
-      "required": true,
-      "default": 2.3522,
-      "min": -180,
-      "max": 180
-    },
-    {
-      "key": "unit",
+      "key": "language",
       "type": "select",
-      "label": { "en": "Temperature unit", "fr": "Unité de température" },
-      "required": false,
-      "default": "celsius",
-      "options": [
-        { "value": "celsius", "label": { "en": "Celsius", "fr": "Celsius" } },
-        { "value": "fahrenheit", "label": { "en": "Fahrenheit", "fr": "Fahrenheit" } }
-      ]
-    },
-    {
-      "key": "poll_frequency",
-      "type": "number",
-      "label": { "en": "Refresh interval (s)", "fr": "Intervalle de rafraîchissement (s)" },
+      "label": {
+        "en": "Language of the feature names",
+        "fr": "Langue des noms de fonctionnalités",
+        "de": "Sprache der Funktionsnamen",
+        "es": "Idioma de los nombres de las funciones"
+      },
       "description": {
-        "en": "How often sensors are polled, in seconds (one minute minimum).",
-        "fr": "Fréquence d'interrogation des capteurs, en secondes (une minute minimum)."
+        "en": "Used when the device is added to Gladys: the names do not change afterwards.",
+        "fr": "Utilisée quand l'appareil est ajouté à Gladys : les noms ne changent plus ensuite.",
+        "de": "Wird beim Hinzufügen des Geräts zu Gladys verwendet: Die Namen ändern sich danach nicht mehr.",
+        "es": "Se usa cuando el dispositivo se añade a Gladys: los nombres no cambian después."
       },
       "required": false,
-      "default": 300,
-      "min": 60,
-      "max": 3600
+      "default": "fr",
+      "options": [
+        {
+          "value": "en",
+          "label": {
+            "en": "English",
+            "fr": "Anglais",
+            "de": "Englisch",
+            "es": "Inglés"
+          }
+        },
+        {
+          "value": "fr",
+          "label": {
+            "en": "French",
+            "fr": "Français",
+            "de": "Französisch",
+            "es": "Francés"
+          }
+        },
+        {
+          "value": "de",
+          "label": {
+            "en": "German",
+            "fr": "Allemand",
+            "de": "Deutsch",
+            "es": "Alemán"
+          }
+        },
+        {
+          "value": "es",
+          "label": {
+            "en": "Spanish",
+            "fr": "Espagnol",
+            "de": "Spanisch",
+            "es": "Español"
+          }
+        }
+      ]
     }
   ],
   "actions": [
     {
-      "key": "test_weather",
-      "label": { "en": "Test the weather provider", "fr": "Tester le fournisseur météo" },
-      "timeout_seconds": 30
-    },
-    {
-      "key": "identify",
-      "label": { "en": "Identify a device", "fr": "Identifier un appareil" },
-      "fields": [
-        {
-          "key": "device",
-          "type": "select",
-          "source": "devices",
-          "label": { "en": "Device", "fr": "Appareil" },
-          "required": true
-        }
-      ]
+      "key": "refresh",
+      "label": {
+        "en": "Refresh the prices now",
+        "fr": "Relever les prix maintenant",
+        "de": "Preise jetzt abrufen",
+        "es": "Actualizar los precios ahora"
+      },
+      "description": {
+        "en": "Reads ComEd now and shows the latest 5-minute price and whether tomorrow's prices are out.",
+        "fr": "Interroge ComEd maintenant et affiche le dernier prix à 5 minutes, et si les prix de demain sont publiés.",
+        "de": "Fragt ComEd jetzt ab und zeigt den letzten 5-Minuten-Preis und ob die Preise für morgen veröffentlicht sind.",
+        "es": "Consulta ComEd ahora y muestra el último precio de 5 minutos y si los precios de mañana están publicados."
+      },
+      "timeout_seconds": 50
     }
   ],
   "scene_triggers": [
     {
-      "key": "motion_detected",
-      "label": { "en": "Motion detected", "fr": "Mouvement détecté" },
+      "key": "hour_average_below",
+      "label": {
+        "en": "The hourly price drops below a threshold",
+        "fr": "Le prix horaire passe sous un seuil",
+        "de": "Der Stundenpreis fällt unter eine Schwelle",
+        "es": "El precio horario baja de un umbral"
+      },
       "description": {
-        "en": "A demo motion sensor saw a person or an animal move.",
-        "fr": "Un détecteur de démonstration a vu bouger une personne ou un animal."
+        "en": "The average of the current hour (the billed price) goes under the threshold: at most once an hour.",
+        "fr": "La moyenne de l'heure en cours (le prix facturé) passe sous le seuil : une fois par heure au plus.",
+        "de": "Der Schnitt der aktuellen Stunde (der abgerechnete Preis) fällt unter die Schwelle: höchstens einmal pro Stunde.",
+        "es": "La media de la hora actual (el precio facturado) baja del umbral: como mucho una vez por hora."
       },
       "fields": [
         {
-          "key": "device",
+          "key": "threshold",
           "type": "select",
-          "source": "devices",
-          "label": { "en": "Sensor", "fr": "Détecteur" }
-        },
-        {
-          "key": "target",
-          "type": "multi_select",
-          "label": { "en": "What moved", "fr": "Ce qui a bougé" },
+          "label": {
+            "en": "Threshold",
+            "fr": "Seuil",
+            "de": "Schwelle",
+            "es": "Umbral"
+          },
+          "required": true,
+          "default": "2",
           "options": [
-            { "value": "person", "label": { "en": "Person", "fr": "Personne" } },
-            { "value": "animal", "label": { "en": "Animal", "fr": "Animal" } }
+            {
+              "value": "0",
+              "label": {
+                "en": "0 ¢/kWh",
+                "fr": "0 ¢/kWh",
+                "de": "0 ¢/kWh",
+                "es": "0 ¢/kWh"
+              }
+            },
+            {
+              "value": "1",
+              "label": {
+                "en": "1 ¢/kWh",
+                "fr": "1 ¢/kWh",
+                "de": "1 ¢/kWh",
+                "es": "1 ¢/kWh"
+              }
+            },
+            {
+              "value": "2",
+              "label": {
+                "en": "2 ¢/kWh",
+                "fr": "2 ¢/kWh",
+                "de": "2 ¢/kWh",
+                "es": "2 ¢/kWh"
+              }
+            },
+            {
+              "value": "3",
+              "label": {
+                "en": "3 ¢/kWh",
+                "fr": "3 ¢/kWh",
+                "de": "3 ¢/kWh",
+                "es": "3 ¢/kWh"
+              }
+            },
+            {
+              "value": "4",
+              "label": {
+                "en": "4 ¢/kWh",
+                "fr": "4 ¢/kWh",
+                "de": "4 ¢/kWh",
+                "es": "4 ¢/kWh"
+              }
+            },
+            {
+              "value": "5",
+              "label": {
+                "en": "5 ¢/kWh",
+                "fr": "5 ¢/kWh",
+                "de": "5 ¢/kWh",
+                "es": "5 ¢/kWh"
+              }
+            },
+            {
+              "value": "6",
+              "label": {
+                "en": "6 ¢/kWh",
+                "fr": "6 ¢/kWh",
+                "de": "6 ¢/kWh",
+                "es": "6 ¢/kWh"
+              }
+            },
+            {
+              "value": "8",
+              "label": {
+                "en": "8 ¢/kWh",
+                "fr": "8 ¢/kWh",
+                "de": "8 ¢/kWh",
+                "es": "8 ¢/kWh"
+              }
+            },
+            {
+              "value": "10",
+              "label": {
+                "en": "10 ¢/kWh",
+                "fr": "10 ¢/kWh",
+                "de": "10 ¢/kWh",
+                "es": "10 ¢/kWh"
+              }
+            },
+            {
+              "value": "12",
+              "label": {
+                "en": "12 ¢/kWh",
+                "fr": "12 ¢/kWh",
+                "de": "12 ¢/kWh",
+                "es": "12 ¢/kWh"
+              }
+            },
+            {
+              "value": "15",
+              "label": {
+                "en": "15 ¢/kWh",
+                "fr": "15 ¢/kWh",
+                "de": "15 ¢/kWh",
+                "es": "15 ¢/kWh"
+              }
+            },
+            {
+              "value": "20",
+              "label": {
+                "en": "20 ¢/kWh",
+                "fr": "20 ¢/kWh",
+                "de": "20 ¢/kWh",
+                "es": "20 ¢/kWh"
+              }
+            }
           ]
         }
       ],
       "variables": [
         {
-          "key": "target",
+          "key": "hour_average",
+          "type": "number",
+          "label": {
+            "en": "Current hour average (¢/kWh)",
+            "fr": "Moyenne de l'heure en cours (¢/kWh)",
+            "de": "Schnitt aktuelle Stunde (¢/kWh)",
+            "es": "Media de la hora actual (¢/kWh)"
+          }
+        },
+        {
+          "key": "price",
+          "type": "number",
+          "label": {
+            "en": "5-minute price (¢/kWh)",
+            "fr": "Prix 5 minutes (¢/kWh)",
+            "de": "5-Minuten-Preis (¢/kWh)",
+            "es": "Precio de 5 minutos (¢/kWh)"
+          }
+        },
+        {
+          "key": "hour_start",
           "type": "string",
-          "label": { "en": "What moved", "fr": "Ce qui a bougé" }
+          "label": {
+            "en": "Hour (HH:MM)",
+            "fr": "Heure (HH:MM)",
+            "de": "Stunde (HH:MM)",
+            "es": "Hora (HH:MM)"
+          }
+        },
+        {
+          "key": "time",
+          "type": "string",
+          "label": {
+            "en": "Time of the price (HH:MM)",
+            "fr": "Heure du prix (HH:MM)",
+            "de": "Uhrzeit des Preises (HH:MM)",
+            "es": "Hora del precio (HH:MM)"
+          }
+        }
+      ]
+    },
+    {
+      "key": "hour_average_above",
+      "label": {
+        "en": "The hourly price rises above a threshold",
+        "fr": "Le prix horaire passe au-dessus d'un seuil",
+        "de": "Der Stundenpreis steigt über eine Schwelle",
+        "es": "El precio horario supera un umbral"
+      },
+      "description": {
+        "en": "The average of the current hour (the billed price) goes over the threshold: at most once an hour.",
+        "fr": "La moyenne de l'heure en cours (le prix facturé) passe au-dessus du seuil : une fois par heure au plus.",
+        "de": "Der Schnitt der aktuellen Stunde (der abgerechnete Preis) steigt über die Schwelle: höchstens einmal pro Stunde.",
+        "es": "La media de la hora actual (el precio facturado) supera el umbral: como mucho una vez por hora."
+      },
+      "fields": [
+        {
+          "key": "threshold",
+          "type": "select",
+          "label": {
+            "en": "Threshold",
+            "fr": "Seuil",
+            "de": "Schwelle",
+            "es": "Umbral"
+          },
+          "required": true,
+          "default": "8",
+          "options": [
+            {
+              "value": "0",
+              "label": {
+                "en": "0 ¢/kWh",
+                "fr": "0 ¢/kWh",
+                "de": "0 ¢/kWh",
+                "es": "0 ¢/kWh"
+              }
+            },
+            {
+              "value": "1",
+              "label": {
+                "en": "1 ¢/kWh",
+                "fr": "1 ¢/kWh",
+                "de": "1 ¢/kWh",
+                "es": "1 ¢/kWh"
+              }
+            },
+            {
+              "value": "2",
+              "label": {
+                "en": "2 ¢/kWh",
+                "fr": "2 ¢/kWh",
+                "de": "2 ¢/kWh",
+                "es": "2 ¢/kWh"
+              }
+            },
+            {
+              "value": "3",
+              "label": {
+                "en": "3 ¢/kWh",
+                "fr": "3 ¢/kWh",
+                "de": "3 ¢/kWh",
+                "es": "3 ¢/kWh"
+              }
+            },
+            {
+              "value": "4",
+              "label": {
+                "en": "4 ¢/kWh",
+                "fr": "4 ¢/kWh",
+                "de": "4 ¢/kWh",
+                "es": "4 ¢/kWh"
+              }
+            },
+            {
+              "value": "5",
+              "label": {
+                "en": "5 ¢/kWh",
+                "fr": "5 ¢/kWh",
+                "de": "5 ¢/kWh",
+                "es": "5 ¢/kWh"
+              }
+            },
+            {
+              "value": "6",
+              "label": {
+                "en": "6 ¢/kWh",
+                "fr": "6 ¢/kWh",
+                "de": "6 ¢/kWh",
+                "es": "6 ¢/kWh"
+              }
+            },
+            {
+              "value": "8",
+              "label": {
+                "en": "8 ¢/kWh",
+                "fr": "8 ¢/kWh",
+                "de": "8 ¢/kWh",
+                "es": "8 ¢/kWh"
+              }
+            },
+            {
+              "value": "10",
+              "label": {
+                "en": "10 ¢/kWh",
+                "fr": "10 ¢/kWh",
+                "de": "10 ¢/kWh",
+                "es": "10 ¢/kWh"
+              }
+            },
+            {
+              "value": "12",
+              "label": {
+                "en": "12 ¢/kWh",
+                "fr": "12 ¢/kWh",
+                "de": "12 ¢/kWh",
+                "es": "12 ¢/kWh"
+              }
+            },
+            {
+              "value": "15",
+              "label": {
+                "en": "15 ¢/kWh",
+                "fr": "15 ¢/kWh",
+                "de": "15 ¢/kWh",
+                "es": "15 ¢/kWh"
+              }
+            },
+            {
+              "value": "20",
+              "label": {
+                "en": "20 ¢/kWh",
+                "fr": "20 ¢/kWh",
+                "de": "20 ¢/kWh",
+                "es": "20 ¢/kWh"
+              }
+            }
+          ]
+        }
+      ],
+      "variables": [
+        {
+          "key": "hour_average",
+          "type": "number",
+          "label": {
+            "en": "Current hour average (¢/kWh)",
+            "fr": "Moyenne de l'heure en cours (¢/kWh)",
+            "de": "Schnitt aktuelle Stunde (¢/kWh)",
+            "es": "Media de la hora actual (¢/kWh)"
+          }
+        },
+        {
+          "key": "price",
+          "type": "number",
+          "label": {
+            "en": "5-minute price (¢/kWh)",
+            "fr": "Prix 5 minutes (¢/kWh)",
+            "de": "5-Minuten-Preis (¢/kWh)",
+            "es": "Precio de 5 minutos (¢/kWh)"
+          }
+        },
+        {
+          "key": "hour_start",
+          "type": "string",
+          "label": {
+            "en": "Hour (HH:MM)",
+            "fr": "Heure (HH:MM)",
+            "de": "Stunde (HH:MM)",
+            "es": "Hora (HH:MM)"
+          }
+        },
+        {
+          "key": "time",
+          "type": "string",
+          "label": {
+            "en": "Time of the price (HH:MM)",
+            "fr": "Heure du prix (HH:MM)",
+            "de": "Uhrzeit des Preises (HH:MM)",
+            "es": "Hora del precio (HH:MM)"
+          }
+        }
+      ]
+    },
+    {
+      "key": "negative_price",
+      "label": {
+        "en": "The price turns negative",
+        "fr": "Le prix devient négatif",
+        "de": "Der Preis wird negativ",
+        "es": "El precio pasa a ser negativo"
+      },
+      "description": {
+        "en": "A 5-minute price below zero, after one at or above zero: a good time to consume.",
+        "fr": "Un prix à 5 minutes sous zéro, après un prix positif ou nul : le moment de consommer.",
+        "de": "Ein 5-Minuten-Preis unter null nach einem Preis ab null: ein guter Moment zum Verbrauchen.",
+        "es": "Un precio de 5 minutos bajo cero, tras uno positivo o nulo: buen momento para consumir."
+      },
+      "variables": [
+        {
+          "key": "hour_average",
+          "type": "number",
+          "label": {
+            "en": "Current hour average (¢/kWh)",
+            "fr": "Moyenne de l'heure en cours (¢/kWh)",
+            "de": "Schnitt aktuelle Stunde (¢/kWh)",
+            "es": "Media de la hora actual (¢/kWh)"
+          }
+        },
+        {
+          "key": "price",
+          "type": "number",
+          "label": {
+            "en": "5-minute price (¢/kWh)",
+            "fr": "Prix 5 minutes (¢/kWh)",
+            "de": "5-Minuten-Preis (¢/kWh)",
+            "es": "Precio de 5 minutos (¢/kWh)"
+          }
+        },
+        {
+          "key": "hour_start",
+          "type": "string",
+          "label": {
+            "en": "Hour (HH:MM)",
+            "fr": "Heure (HH:MM)",
+            "de": "Stunde (HH:MM)",
+            "es": "Hora (HH:MM)"
+          }
+        },
+        {
+          "key": "time",
+          "type": "string",
+          "label": {
+            "en": "Time of the price (HH:MM)",
+            "fr": "Heure du prix (HH:MM)",
+            "de": "Uhrzeit des Preises (HH:MM)",
+            "es": "Hora del precio (HH:MM)"
+          }
+        }
+      ]
+    },
+    {
+      "key": "tomorrow_prices_published",
+      "label": {
+        "en": "Tomorrow's prices are published",
+        "fr": "Les prix de demain sont publiés",
+        "de": "Die Preise für morgen sind veröffentlicht",
+        "es": "Los precios de mañana están publicados"
+      },
+      "description": {
+        "en": "Once a day, in the afternoon, when ComEd publishes tomorrow's day-ahead prices: for a notification.",
+        "fr": "Une fois par jour, l'après-midi, quand ComEd publie les prix prévus du lendemain : pour une notification.",
+        "de": "Einmal am Tag, nachmittags, wenn ComEd die Day-Ahead-Preise für morgen veröffentlicht: für eine Benachrichtigung.",
+        "es": "Una vez al día, por la tarde, cuando ComEd publica los precios previstos de mañana: para una notificación."
+      },
+      "variables": [
+        {
+          "key": "average_price",
+          "type": "number",
+          "label": {
+            "en": "Average price (¢/kWh)",
+            "fr": "Prix moyen (¢/kWh)",
+            "de": "Durchschnittspreis (¢/kWh)",
+            "es": "Precio medio (¢/kWh)"
+          }
+        },
+        {
+          "key": "min_price",
+          "type": "number",
+          "label": {
+            "en": "Lowest price (¢/kWh)",
+            "fr": "Prix min (¢/kWh)",
+            "de": "Tiefstpreis (¢/kWh)",
+            "es": "Precio mínimo (¢/kWh)"
+          }
+        },
+        {
+          "key": "cheapest_time",
+          "type": "string",
+          "label": {
+            "en": "Cheapest hour (HH:MM)",
+            "fr": "Heure la moins chère (HH:MM)",
+            "de": "Günstigste Stunde (HH:MM)",
+            "es": "Hora más barata (HH:MM)"
+          }
+        },
+        {
+          "key": "max_price",
+          "type": "number",
+          "label": {
+            "en": "Highest price (¢/kWh)",
+            "fr": "Prix max (¢/kWh)",
+            "de": "Höchstpreis (¢/kWh)",
+            "es": "Precio máximo (¢/kWh)"
+          }
+        },
+        {
+          "key": "priciest_time",
+          "type": "string",
+          "label": {
+            "en": "Most expensive hour (HH:MM)",
+            "fr": "Heure la plus chère (HH:MM)",
+            "de": "Teuerste Stunde (HH:MM)",
+            "es": "Hora más cara (HH:MM)"
+          }
+        },
+        {
+          "key": "cheapest_3h_start",
+          "type": "string",
+          "label": {
+            "en": "Start of the cheapest 3 hours (HH:MM)",
+            "fr": "Début des 3 h les moins chères (HH:MM)",
+            "de": "Beginn der günstigsten 3 Std. (HH:MM)",
+            "es": "Inicio de las 3 h más baratas (HH:MM)"
+          }
         }
       ]
     }
   ],
   "scene_actions": [
     {
-      "key": "identify_device",
-      "label": { "en": "Identify a device", "fr": "Identifier un appareil" },
-      "description": {
-        "en": "Make a device signal itself (the demo light blinks).",
-        "fr": "Fait se signaler un appareil (la lampe de démonstration clignote)."
+      "key": "find_cheapest_window",
+      "label": {
+        "en": "Find the cheapest hours before a deadline",
+        "fr": "Trouver les heures les moins chères avant une heure limite",
+        "de": "Die günstigsten Stunden vor einer Frist finden",
+        "es": "Encontrar las horas más baratas antes de una hora límite"
       },
-      "timeout_seconds": 15,
+      "description": {
+        "en": "The cheapest run of N consecutive hours from now on the day-ahead prices, ending before the deadline.",
+        "fr": "La plage de N heures consécutives la moins chère dès maintenant selon les prix prévus, finie avant l'heure limite.",
+        "de": "Der günstigste Block aus N aufeinanderfolgenden Stunden ab jetzt nach Day-Ahead-Preisen, vor der Frist beendet.",
+        "es": "El tramo de N horas consecutivas más barato desde ahora según los precios previstos, terminado antes de la hora límite."
+      },
+      "timeout_seconds": 40,
       "fields": [
         {
-          "key": "device",
+          "key": "hours",
           "type": "select",
-          "source": "devices",
-          "label": { "en": "Device", "fr": "Appareil" },
-          "required": true
+          "label": {
+            "en": "Duration",
+            "fr": "Durée",
+            "de": "Dauer",
+            "es": "Duración"
+          },
+          "required": true,
+          "default": "2",
+          "options": [
+            {
+              "value": "1",
+              "label": {
+                "en": "1 hour",
+                "fr": "1 heure",
+                "de": "1 Stunde",
+                "es": "1 hora"
+              }
+            },
+            {
+              "value": "2",
+              "label": {
+                "en": "2 hours",
+                "fr": "2 heures",
+                "de": "2 Stunden",
+                "es": "2 horas"
+              }
+            },
+            {
+              "value": "3",
+              "label": {
+                "en": "3 hours",
+                "fr": "3 heures",
+                "de": "3 Stunden",
+                "es": "3 horas"
+              }
+            },
+            {
+              "value": "4",
+              "label": {
+                "en": "4 hours",
+                "fr": "4 heures",
+                "de": "4 Stunden",
+                "es": "4 horas"
+              }
+            },
+            {
+              "value": "5",
+              "label": {
+                "en": "5 hours",
+                "fr": "5 heures",
+                "de": "5 Stunden",
+                "es": "5 horas"
+              }
+            },
+            {
+              "value": "6",
+              "label": {
+                "en": "6 hours",
+                "fr": "6 heures",
+                "de": "6 Stunden",
+                "es": "6 horas"
+              }
+            },
+            {
+              "value": "8",
+              "label": {
+                "en": "8 hours",
+                "fr": "8 heures",
+                "de": "8 Stunden",
+                "es": "8 horas"
+              }
+            }
+          ]
+        },
+        {
+          "key": "before",
+          "type": "select",
+          "label": {
+            "en": "Finished before",
+            "fr": "Fini avant",
+            "de": "Fertig vor",
+            "es": "Terminado antes de"
+          },
+          "description": {
+            "en": "The next time this hour comes (Chicago time), today or tomorrow.",
+            "fr": "La prochaine fois que cette heure arrive (heure de Chicago), aujourd'hui ou demain.",
+            "de": "Das nächste Mal, wenn diese Uhrzeit kommt (Uhrzeit Chicago), heute oder morgen.",
+            "es": "La próxima vez que llegue esta hora (hora de Chicago), hoy o mañana."
+          },
+          "required": true,
+          "default": "07:00",
+          "options": [
+            {
+              "value": "any",
+              "label": {
+                "en": "No deadline (all known prices)",
+                "fr": "Sans limite (tous les prix connus)",
+                "de": "Ohne Frist (alle bekannten Preise)",
+                "es": "Sin límite (todos los precios conocidos)"
+              }
+            },
+            {
+              "value": "00:00",
+              "label": {
+                "en": "00:00",
+                "fr": "00:00",
+                "de": "00:00",
+                "es": "00:00"
+              }
+            },
+            {
+              "value": "01:00",
+              "label": {
+                "en": "01:00",
+                "fr": "01:00",
+                "de": "01:00",
+                "es": "01:00"
+              }
+            },
+            {
+              "value": "02:00",
+              "label": {
+                "en": "02:00",
+                "fr": "02:00",
+                "de": "02:00",
+                "es": "02:00"
+              }
+            },
+            {
+              "value": "03:00",
+              "label": {
+                "en": "03:00",
+                "fr": "03:00",
+                "de": "03:00",
+                "es": "03:00"
+              }
+            },
+            {
+              "value": "04:00",
+              "label": {
+                "en": "04:00",
+                "fr": "04:00",
+                "de": "04:00",
+                "es": "04:00"
+              }
+            },
+            {
+              "value": "05:00",
+              "label": {
+                "en": "05:00",
+                "fr": "05:00",
+                "de": "05:00",
+                "es": "05:00"
+              }
+            },
+            {
+              "value": "06:00",
+              "label": {
+                "en": "06:00",
+                "fr": "06:00",
+                "de": "06:00",
+                "es": "06:00"
+              }
+            },
+            {
+              "value": "07:00",
+              "label": {
+                "en": "07:00",
+                "fr": "07:00",
+                "de": "07:00",
+                "es": "07:00"
+              }
+            },
+            {
+              "value": "08:00",
+              "label": {
+                "en": "08:00",
+                "fr": "08:00",
+                "de": "08:00",
+                "es": "08:00"
+              }
+            },
+            {
+              "value": "09:00",
+              "label": {
+                "en": "09:00",
+                "fr": "09:00",
+                "de": "09:00",
+                "es": "09:00"
+              }
+            },
+            {
+              "value": "10:00",
+              "label": {
+                "en": "10:00",
+                "fr": "10:00",
+                "de": "10:00",
+                "es": "10:00"
+              }
+            },
+            {
+              "value": "11:00",
+              "label": {
+                "en": "11:00",
+                "fr": "11:00",
+                "de": "11:00",
+                "es": "11:00"
+              }
+            },
+            {
+              "value": "12:00",
+              "label": {
+                "en": "12:00",
+                "fr": "12:00",
+                "de": "12:00",
+                "es": "12:00"
+              }
+            },
+            {
+              "value": "13:00",
+              "label": {
+                "en": "13:00",
+                "fr": "13:00",
+                "de": "13:00",
+                "es": "13:00"
+              }
+            },
+            {
+              "value": "14:00",
+              "label": {
+                "en": "14:00",
+                "fr": "14:00",
+                "de": "14:00",
+                "es": "14:00"
+              }
+            },
+            {
+              "value": "15:00",
+              "label": {
+                "en": "15:00",
+                "fr": "15:00",
+                "de": "15:00",
+                "es": "15:00"
+              }
+            },
+            {
+              "value": "16:00",
+              "label": {
+                "en": "16:00",
+                "fr": "16:00",
+                "de": "16:00",
+                "es": "16:00"
+              }
+            },
+            {
+              "value": "17:00",
+              "label": {
+                "en": "17:00",
+                "fr": "17:00",
+                "de": "17:00",
+                "es": "17:00"
+              }
+            },
+            {
+              "value": "18:00",
+              "label": {
+                "en": "18:00",
+                "fr": "18:00",
+                "de": "18:00",
+                "es": "18:00"
+              }
+            },
+            {
+              "value": "19:00",
+              "label": {
+                "en": "19:00",
+                "fr": "19:00",
+                "de": "19:00",
+                "es": "19:00"
+              }
+            },
+            {
+              "value": "20:00",
+              "label": {
+                "en": "20:00",
+                "fr": "20:00",
+                "de": "20:00",
+                "es": "20:00"
+              }
+            },
+            {
+              "value": "21:00",
+              "label": {
+                "en": "21:00",
+                "fr": "21:00",
+                "de": "21:00",
+                "es": "21:00"
+              }
+            },
+            {
+              "value": "22:00",
+              "label": {
+                "en": "22:00",
+                "fr": "22:00",
+                "de": "22:00",
+                "es": "22:00"
+              }
+            },
+            {
+              "value": "23:00",
+              "label": {
+                "en": "23:00",
+                "fr": "23:00",
+                "de": "23:00",
+                "es": "23:00"
+              }
+            }
+          ]
         }
       ],
       "outputs": [
         {
-          "key": "signalled",
+          "key": "found",
           "type": "boolean",
-          "label": { "en": "Device signalled", "fr": "Appareil signalé" }
+          "label": {
+            "en": "Window found",
+            "fr": "Plage trouvée",
+            "de": "Zeitfenster gefunden",
+            "es": "Tramo encontrado"
+          }
+        },
+        {
+          "key": "starts_now",
+          "type": "boolean",
+          "label": {
+            "en": "Starts now",
+            "fr": "Commence maintenant",
+            "de": "Beginnt jetzt",
+            "es": "Empieza ahora"
+          }
+        },
+        {
+          "key": "start_time",
+          "type": "string",
+          "label": {
+            "en": "Start (HH:MM)",
+            "fr": "Début (HH:MM)",
+            "de": "Beginn (HH:MM)",
+            "es": "Inicio (HH:MM)"
+          }
+        },
+        {
+          "key": "end_time",
+          "type": "string",
+          "label": {
+            "en": "End (HH:MM)",
+            "fr": "Fin (HH:MM)",
+            "de": "Ende (HH:MM)",
+            "es": "Fin (HH:MM)"
+          }
+        },
+        {
+          "key": "average_price",
+          "type": "number",
+          "label": {
+            "en": "Average price (¢/kWh)",
+            "fr": "Prix moyen (¢/kWh)",
+            "de": "Durchschnittspreis (¢/kWh)",
+            "es": "Precio medio (¢/kWh)"
+          }
+        },
+        {
+          "key": "minutes_to_start",
+          "type": "number",
+          "label": {
+            "en": "Minutes until the start",
+            "fr": "Minutes avant le début",
+            "de": "Minuten bis zum Beginn",
+            "es": "Minutos hasta el inicio"
+          }
         }
       ]
     }
   ],
   "widgets": [
     {
-      "key": "demo_status",
-      "label": { "en": "Demo status", "fr": "État de la démo" },
-      "description": {
-        "en": "Live temperature and plug power, plug connection and observed location.",
-        "fr": "Température et puissance en direct, connexion de la prise, position observée."
+      "key": "prices",
+      "label": {
+        "en": "ComEd electricity prices",
+        "fr": "Prix de l'électricité ComEd",
+        "de": "ComEd-Strompreise",
+        "es": "Precios de electricidad ComEd"
       },
-      "icon": "activity",
-      "action_timeout_seconds": 15
+      "description": {
+        "en": "Today's price curve, the 5-minute price and hourly average now, and tomorrow's prices.",
+        "fr": "Courbe des prix du jour, prix à 5 minutes et moyenne horaire actuels, et prix de demain.",
+        "de": "Preiskurve von heute, aktueller 5-Minuten-Preis und Stundenschnitt, und die Preise für morgen.",
+        "es": "Curva de precios de hoy, precio de 5 minutos y media horaria actuales, y precios de mañana."
+      },
+      "icon": "bar-chart-2"
     }
   ]
 }
