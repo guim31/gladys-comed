@@ -30,6 +30,12 @@ Gladys before reporting a problem.
 
 In scope: the code of this repository and the Docker image it publishes.
 
+The integration stores no secret: it reads the public API of ComEd Hourly Pricing
+(`hourlypricing.comed.com`, HTTPS, no account, no key) and keeps in `/data` only
+`scene-events.json`, the last 5-minute price compared by the scene triggers and the
+last day whose prices were announced. It opens no port and talks to nothing on the
+local network.
+
 Out of scope: Gladys Assistant itself (see its
 [security policy](https://github.com/GladysAssistant/Gladys/security/policy)),
-and the third-party services and devices the integration talks to.
+and the ComEd API.

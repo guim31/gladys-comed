@@ -1,93 +1,58 @@
+// -----------------------------------------------------------------------------
+// The scene action: the cheapest hours before a deadline, on the real
+// day-ahead prices of 24 and 25 October 2026.
+// -----------------------------------------------------------------------------
+
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
-import { createFakeGladys } from '@gladysassistant/integration-sdk/testing';
-import { DEVICE_BLUEPRINTS } from '../src/devices/index.js';
-import { MOTION_DETECTED_TRIGGER, motionSensor } from '../src/devices/motionSensor.js';
-import { SCENE_ACTIONS } from '../src/scenes.js';
-import { normalizeConfig } from '../src/config.js';
+import { findCheapestWindow, nextDeadline, SCENE_ACTION } from '../src/scenes.js';
+import { createWorld } from './helpers/world.js';
 
-const manifest = JSON.parse(
-  await readFile(new URL('../gladys-assistant-integration.json', import.meta.url), 'utf8'),
-);
-const config = normalizeConfig();
+const run = async (world, fields) => {
+  const ack = await world.gladys.fake.sceneAction(SCENE_ACTION.CHEAPEST_WINDOW, fields);
+  assert.equal(ack.success, true, ack.error);
+  return ack.data.outputs;
+};
 
-const declarationOf = (list, key) => manifest[list].find((entry) => entry.key === key);
-const keysOf = (list) => (list ?? []).map((entry) => entry.key);
-const deviceIdOf = (gladys, key) =>
-  DEVICE_BLUEPRINTS.find((bp) => bp.key === key).deviceExternalId(gladys);
-
-// Let the async interval callback run to completion.
-const flush = () => new Promise((resolve) => setImmediate(resolve));
-
-test('the motion sensor fires one motion_detected event per detection, none on the clear', async (t) => {
-  t.mock.timers.enable({ apis: ['setInterval', 'setTimeout'] });
-  const gladys = createFakeGladys();
-  const stopPush = motionSensor.startPush(gladys, config);
-  try {
-    t.mock.timers.tick(60_000);
-    await flush();
-    assert.equal(gladys.fake.sceneEvents.length, 1, 'one detection, one event');
-    assert.equal(gladys.fake.sceneEvents[0].key, MOTION_DETECTED_TRIGGER);
-    assert.equal(gladys.fake.states.at(-1).state, 1, 'the state is still published');
-
-    t.mock.timers.tick(10_000);
-    await flush();
-    assert.equal(gladys.fake.states.at(-1).state, 0, 'the detection is cleared');
-    assert.equal(gladys.fake.sceneEvents.length, 1, 'the clear fires no event');
-  } finally {
-    stopPush();
-  }
-});
-
-test('motion_detected data only carries keys the trigger declares', async (t) => {
-  t.mock.timers.enable({ apis: ['setInterval', 'setTimeout'] });
-  const gladys = createFakeGladys();
-  const stopPush = motionSensor.startPush(gladys, config);
-  try {
-    t.mock.timers.tick(60_000);
-    await flush();
-  } finally {
-    stopPush();
-  }
-  const [{ data }] = gladys.fake.sceneEvents;
-  const trigger = declarationOf('scene_triggers', MOTION_DETECTED_TRIGGER);
-  // The core keeps the `fields` keys (filters) and the `variables` keys
-  // (exposed to the scene): any other key would be silently dropped.
-  const declared = [...keysOf(trigger.fields), ...keysOf(trigger.variables)];
-  for (const [key, value] of Object.entries(data)) {
-    assert.ok(declared.includes(key), `data.${key} is not declared, the core would drop it`);
-    assert.ok(value === null || typeof value !== 'object', `data.${key} must be a primitive`);
-  }
-  // A `"source": "devices"` filter stores a device external_id.
-  assert.equal(data.device, deviceIdOf(gladys, 'motion-sensor'));
-  const targets = trigger.fields.find((field) => field.key === 'target').options;
-  assert.ok(
-    targets.some((option) => option.value === data.target),
-    `data.target "${data.target}" must be one of the filter options`,
-  );
-});
-
-test('identify_device signals the chosen device and returns the declared outputs', async () => {
-  const gladys = createFakeGladys();
-  const outputs = await SCENE_ACTIONS.identify_device(gladys, {
-    fields: { device: deviceIdOf(gladys, 'light') },
-    config,
+test('in the afternoon, tomorrow morning counts', async () => {
+  const world = await createWorld(); // 14:36 in Chicago
+  assert.deepEqual(await run(world, { hours: '3', before: '07:00' }), {
+    found: true,
+    starts_now: false,
+    start_time: '01:00',
+    end_time: '04:00',
+    average_price: 2.3,
+    minutes_to_start: 624,
   });
-  assert.deepEqual(outputs, { signalled: true });
-  const declared = keysOf(declarationOf('scene_actions', 'identify_device').outputs);
-  for (const key of Object.keys(outputs)) {
-    assert.ok(declared.includes(key), `output "${key}" is not declared, the core would drop it`);
-  }
+  // No deadline: the whole of tomorrow.
+  const any = await run(world, { hours: '1', before: 'any' });
+  assert.equal(any.start_time, '10:00');
 });
 
-test('identify_device reports a device that cannot signal itself through its output', async () => {
-  // Not a failure: a scene action is never a condition, the scene author
-  // gates the following actions on the output instead.
-  const gladys = createFakeGladys();
-  const outputs = await SCENE_ACTIONS.identify_device(gladys, {
-    fields: { device: deviceIdOf(gladys, 'weather-station') },
-    config,
-  });
-  assert.deepEqual(outputs, { signalled: false });
+test('in the morning, the deadline within today; too close is not found', async () => {
+  const world = await createWorld({ at: '2026-10-24T14:00:00Z' }); // 09:00
+  const outputs = await run(world, { hours: '2', before: '12:00' });
+  assert.equal(outputs.found, true);
+  assert.equal(outputs.start_time, '09:00');
+  assert.equal(outputs.starts_now, true);
+  assert.equal(outputs.minutes_to_start, 0);
+  assert.equal((await run(world, { hours: '4', before: '11:00' })).found, false);
+  // Beyond the known prices (tomorrow not out): all of today's hours.
+  assert.equal((await run(world, { hours: '1', before: '07:00' })).start_time, '09:00');
+});
+
+test('an unknown choice is an error; no price at all is "not found"', () => {
+  const snapshot = { at: new Date(), forecast: [] };
+  assert.throws(() => findCheapestWindow(snapshot, { hours: '7', before: 'any' }));
+  assert.throws(() => findCheapestWindow(snapshot, { hours: '2', before: '07:30' }));
+  assert.equal(findCheapestWindow(snapshot, { hours: '2', before: 'any' }).found, false);
+});
+
+test('the deadline is the next time the Chicago clock shows it', () => {
+  const at = new Date('2026-10-24T19:36:00Z'); // 14:36 CDT
+  assert.equal(new Date(nextDeadline(at, '07:00')).toISOString(), '2026-10-25T12:00:00.000Z');
+  assert.equal(new Date(nextDeadline(at, '15:00')).toISOString(), '2026-10-24T20:00:00.000Z');
+  // 8 March 2026: 02:00 does not exist, 03:00 CDT takes its place.
+  const spring = new Date('2026-03-08T06:30:00Z'); // 00:30 CST
+  assert.equal(new Date(nextDeadline(spring, '02:00')).toISOString(), '2026-03-08T08:00:00.000Z');
 });

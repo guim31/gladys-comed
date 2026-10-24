@@ -31,17 +31,26 @@ pushing.
 ## Architecture
 
 ```
-index.js                          SDK wiring only: handlers registered before connect()
-src/devices/index.js              registry of the device blueprints + dispatch helpers
-src/devices/<type>.js             one device type per file (buildDevice, onPoll, onSetValue...)
-src/scenes.js                     scene action handlers (manifest `scene_actions`)
-src/widgets.js                    dashboard widget handlers (manifest `widgets`)
+index.js                          SDK wiring only: src/app.js registers the handlers before connect()
+src/app.js                        refresh cycle (own minute timer, onPoll fallback), states, scene events,
+                                  "refresh" action, scene action, widget, config and connection lifecycle
+src/comed.js                      client of the ComEd API: 5-minute feed (JSON), day-ahead (chart literal)
+src/market.js                     known prices, refresh policy (next price due, noon for tomorrow, backoff), snapshot
+src/prices.js                     pure computations: hour of a price, hourly averages, summaries, cheapest window
+src/device.js                     the one device (external id on "hourly-pricing") and its states
+src/triggers.js                   threshold / negative events for a new 5-minute price, "tomorrow published"
+src/scenes.js                     scene action: cheapest run of N day-ahead hours before a deadline
+src/widget.js                     "prices" dashboard widget (manifest `widgets`)
+src/ledger.js                     last price compared, last announced day (/data/scene-events.json)
+src/time.js                       America/Chicago day, clock, wall-clock hour -> instant
+src/i18n.js                       feature names and every user-facing text, en/fr/de/es
+src/issues.js                     a repeated failure logged once, its recovery once
 src/config.js                     DEFAULT_CONFIG (mirrors the manifest defaults) + normalization
-src/weather.js                    example driver (Open-Meteo)
-gladys-assistant-integration.json manifest: name, config_schema, actions, image...
-docs/en.md, docs/fr.md            user documentation, re-hosted by Gladys (mandatory)
-test/                             node --test, against the SDK's fake Gladys (integration-sdk/testing)
-.github/scripts/release.mjs       release helpers (manifest bump, changelog), tested in test/
+scripts/probe.mjs                 reads the real prices (run where the network allows)
+gladys-assistant-integration.json manifest: name, config_schema, actions, triggers, scene action, widget...
+docs/{en,fr,de,es}.md             user documentation, same sections (test/i18n.test.js)
+test/                             node --test, against the SDK's fake Gladys and a fake ComEd API
+test/fixtures/comed/              real ComEd answers (24 h feed, hour average, day-ahead incl. DST days)
 ```
 
 ## Rules
@@ -70,12 +79,36 @@ test/                             node --test, against the SDK's fake Gladys (in
   `type: "provider"`: 5.1.0). `test/manifest.test.js` ties the manifest to the
   code (defaults, action, scene and widget handlers): change both sides
   together.
-- **User-facing text** is bilingual (English and French): action messages,
-  manifest texts, and `docs/en.md` / `docs/fr.md`, kept in sync.
+- **User-facing text** exists in English, French, German and Spanish: action
+  messages, manifest texts, feature names, widget, and `docs/{en,fr,de,es}.md`
+  with the same sections (`test/i18n.test.js`).
 - **Style.** Prettier formats, ESLint catches mistakes. Comments explain why,
   in English. Tests never touch the network.
 
 ---
+
+# ComEd : API et pièges propres à cette intégration
+
+- **API publique sans clé** `https://hourlypricing.comed.com/api` (derrière Imperva) :
+  `type=5minutefeed` (JSON, du plus récent au plus ancien, 24 h glissantes, `millisUTC` et
+  `price` en **chaînes**, ¢/kWh), `type=currenthouraverage`, `type=daynexttoday&date=YYYYMMDD`.
+- **Un prix à 5 minutes est daté de la FIN de ses 5 minutes** : le prix de HH:00 clôt l'heure
+  précédente. La moyenne de l'heure = prix datés de HH:05 à HH+1:00, arrondie au dixième : c'est
+  exactement `currenthouraverage` (vérifié sur deux relevés réels, test `prices.test.js`). On ne
+  lit donc pas cet endpoint.
+- **Publication ~6 min après la date du prix** (le prix de 14:30 sorti à 14:36:30) : relevé
+  calé sur le prochain prix attendu (+12 min après le dernier), ~1 requête / 5 min.
+- **`daynexttoday` n'est pas du JSON** mais un littéral de graphique
+  `[[Date.UTC(2026,9,24,0,0,0), 2.9], …]` : malgré « UTC », ce sont l'**heure murale de Chicago**
+  (mois depuis 0) et l'heure de **début** ; 23 entrées au printemps (pas de 02:00), **24 à
+  l'automne** (une seule 01:00). Jour non publié : `[]`. Demain est publié l'après-midi (vu à
+  14:36 CDT). Sans `date`, c'est aujourd'hui.
+- `datestart`/`dateend` (historique) gèrent mal le changement d'heure : non utilisés.
+- Prix **négatifs** fréquents la nuit (jusqu'à -1,6 ¢ le 24/10/2026).
+- Unité : pas de « cent » dans Gladys ; `currency/decimal` **sans unité**, « ¢/kWh » dans le nom
+  (une unité `dollar` afficherait 2,9 $).
+- Déclencheurs de seuil : la moyenne horaire n'est jugée qu'à partir de son 3e prix (HH:15),
+  sinon elle déclenche et se dédéclenche à HH:05 ; au plus une fois par heure, seuil et sens.
 
 # Notes du mainteneur (guim31)
 
