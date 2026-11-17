@@ -52,7 +52,7 @@ test('categories and capability fields require the right Gladys', () => {
   // Older cores reject any unknown manifest field: categories need 4.86,
   // widgets and scene triggers 5.1. No widget button opens a form (5.2).
   assert.ok(isAtLeast(minGladysVersion(), [5, 1, 0]), manifest.gladys_version);
-  assert.match(pkg.dependencies['@gladysassistant/integration-sdk'], /^\^0\.15\./);
+  assert.match(pkg.dependencies['@gladysassistant/integration-sdk'], /^\^0\.16\./);
 });
 
 test('the manifest version is the package version, and the image is tagged with it', () => {
