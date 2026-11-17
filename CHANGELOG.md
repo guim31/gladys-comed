@@ -10,6 +10,8 @@ the notes of the version's GitHub Release.
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-11-17
+
 ### Changed
 
 - SDK 0.16.1 (`@gladysassistant/integration-sdk`).
@@ -33,5 +35,6 @@ the notes of the version's GitHub Release.
 - A "Refresh the prices now" button in the configuration.
 - Feature names, texts and documentation in English, French, German and Spanish.
 
-[Unreleased]: https://github.com/guim31/gladys-comed/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/guim31/gladys-comed/compare/v1.0.1...HEAD
+[1.0.1]: https://github.com/guim31/gladys-comed/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/guim31/gladys-comed/releases/tag/v1.0.0

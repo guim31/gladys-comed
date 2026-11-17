@@ -8,8 +8,8 @@
     "de": "ComEd Hourly Pricing (Illinois): Echtzeitpreis alle 5 Min., Stundenschnitt und Preise für morgen.",
     "es": "ComEd Hourly Pricing (Illinois): precio en tiempo real a 5 min, media horaria y precios de mañana."
   },
-  "version": "1.0.0",
-  "docker_image": "ghcr.io/guim31/gladys-comed:1.0.0",
+  "version": "1.0.1",
+  "docker_image": "ghcr.io/guim31/gladys-comed:1.0.1",
   "gladys_version": ">=5.1.0",
   "cover_image": "https://raw.githubusercontent.com/guim31/gladys-comed/main/cover.png",
   "categories": ["energy"],
